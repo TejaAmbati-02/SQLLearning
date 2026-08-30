@@ -63,6 +63,25 @@ SELECT * FROM drivers;
 -- dri_1,5,1
 -- dri_2,2,0
 
+
+
+
+WITH rides_cte AS(SELECT *,
+       LEAD(start_loc) OVER(PARTITION BY id ORDER BY start_time) AS next_start_ride
+FROM
+    drivers)
+SELECT
+    id,
+    COUNT(1) AS total_rides,
+    SUM(CASE WHEN end_loc = next_start_ride THEN 1 ELSE 0 END) AS profit_rides
+FROM
+    rides_cte
+GROUP BY
+    id;
+
+
+
+
 WITH rides_combined_CTE AS(
 SELECT *
      ,LEAD(start_loc, 1) OVER(PARTITION BY id ORDER BY start_time ASC) AS next_start_location
@@ -96,6 +115,15 @@ group by id;
 -- 4- write a query to print customer name and no of occurence of character 'n' in the customer name.
 -- customer_name , count_of_occurence_of_n
 
+USE namastesql;
+
+
+SELECT * FROM orders;
+
+SELECT
+    customer_name,
+    len(customer_name) - len(replace(customer_name, 'n', '')) AS count_of_occurence_of_n
+FROM namastesql.dbo.orders;
 
 
 
@@ -110,6 +138,44 @@ group by id;
 
 
 
+(SELECT
+    'category' AS hierarchy,
+    category,
+    ROUND(SUM(CASE WHEN region = 'West' THEN sales END), 2) AS total_sales_in_west_region,
+    ROUND(SUM(CASE WHEN region = 'East' THEN sales END), 2) AS total_sales_in_east_region
+FROM
+    orders
+GROUP BY category)
+
+UNION ALL
+(
+    SELECT
+        'Sub Category',
+        sub_category,
+        ROUND(SUM(CASE WHEN region = 'West' THEN sales END), 2) AS total_sales_in_west_region,
+        ROUND(SUM(CASE WHEN region = 'East' THEN sales END), 2) AS total_sales_in_east_region
+    FROM
+        orders
+    GROUP BY
+        sub_category
+);
+
+
+
+
+
+
+
+
 
 -- 6- the first 2 characters of order_id represents the country of order placed . write a query to print total no of orders placed in each country
 -- (an order can have 2 rows in the data when more than 1 item was purchased in the order but it should be considered as 1 order)
+
+
+SELECT
+    left(order_id,2) AS country,
+    COUNT(DISTINCT order_id) AS total_orders
+FROM
+    orders
+GROUP BY
+    left(order_id, 2);
